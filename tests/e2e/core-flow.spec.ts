@@ -116,6 +116,7 @@ test('外部入口、首次流式回答、多轮上下文、刷新和模型切�
   await expect(page.getByTestId('conversation-panel-footer')).toBeInViewport()
   await expect(page.getByTestId('composer-dock')).toBeInViewport()
   await expect(page.getByTestId('composer-dock').getByTestId('chat-model-select')).toBeVisible()
+  await expect(page.getByTestId('deep-analysis-switch')).not.toBeChecked()
   await expect(page.locator('.chat-header')).toHaveCount(0)
 
   await page.getByTestId('messages-viewport').evaluate(element => {
@@ -126,6 +127,8 @@ test('外部入口、首次流式回答、多轮上下文、刷新和模型切�
   expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBe(await page.evaluate(() => document.documentElement.clientHeight))
 
   await page.getByTestId('chat-input').fill('如果初筛分离不足，下一步如何排查？')
+  await page.getByTestId('deep-analysis-switch').click()
+  await expect(page.getByTestId('deep-analysis-switch')).toBeChecked()
   await page.getByTestId('send-button').click()
   await expect(page.getByTestId('message-assistant')).toHaveCount(2)
   await expect(page.getByTestId('message-assistant').last()).toContainText('初筛分离不足')

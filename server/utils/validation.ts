@@ -49,7 +49,8 @@ export const generateSchema = z.object({
   mode: z.enum(['initial', 'message', 'regenerate']),
   content: z.string().trim().min(1).max(20_000).optional(),
   modelConfigId: z.string().trim().min(1).optional(),
-  assistantMessageId: z.string().trim().min(1).optional()
+  assistantMessageId: z.string().trim().min(1).optional(),
+  deepAnalysis: z.boolean().default(false)
 }).superRefine((value, context) => {
   if (value.mode === 'message' && !value.content) {
     context.addIssue({ code: z.ZodIssueCode.custom, message: '消息内容不能为空', path: ['content'] })

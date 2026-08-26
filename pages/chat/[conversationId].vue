@@ -9,6 +9,7 @@ const { data: conversation, pending, error, refresh } = await useFetch<Conversat
 const { data: models } = await useFetch<ModelConfigPublic[]>('/api/models')
 const input = ref('')
 const selectedModelId = ref('')
+const deepAnalysis = ref(false)
 const generating = ref(false)
 const activeMessageId = ref<string | null>(null)
 const initialAttempted = ref(false)
@@ -16,6 +17,8 @@ const messagesViewport = ref<HTMLElement | null>(null)
 
 const enabledModels = computed(() => (models.value || []).filter(item => item.enabled))
 const canSend = computed(() => Boolean(input.value.trim()) && !generating.value && Boolean(selectedModelId.value))
+const answerModeTitle = computed(() => deepAnalysis.value ? '深度分析' : '快速回答')
+const answerModeHint = computed(() => deepAnalysis.value ? '更完整地权衡复杂条件，响应会稍慢' : '低延迟响应，适合日常检测追问')
 
 watchEffect(() => {
   if (!selectedModelId.value && models.value?.length) {
@@ -112,7 +115,7 @@ async function startGeneration(body: Record<string, unknown>, optimisticUser?: s
     const response = await fetch(`/api/conversations/${conversationId}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...body, modelConfigId: selectedModelId.value })
+      body: JSON.stringify({ ...body, modelConfigId: selectedModelId.value, deepAnalysis: deepAnalysis.value })
     })
     await consumeSse(response)
   } catch (requestError: any) {
@@ -226,9 +229,9 @@ watch(selectedModelId, (value) => {
           <el-input
             v-model="input"
             type="textarea"
-            :autosize="{ minRows: 2, maxRows: 6 }"
+            :autosize="{ minRows: 1, maxRows: 5 }"
             :disabled="generating"
-            placeholder="继续追问方法选择、前处理或异常排查…"
+            :placeholder="deepAnalysis ? '描述需要综合判断的复杂检测问题…' : '继续追问方法选择、前处理或异常排查…'"
             data-testid="chat-input"
             @keydown.ctrl.enter.prevent="sendMessage"
             @keydown.meta.enter.prevent="sendMessage"
@@ -240,9 +243,19 @@ watch(selectedModelId, (value) => {
                 <el-option v-for="model in enabledModels" :key="model.id" :label="model.name" :value="model.id" />
               </el-select>
             </div>
+            <div class="answer-mode-inline" :title="answerModeHint">
+              <span>回答模式</span>
+              <strong>{{ answerModeTitle }}</strong>
+              <el-switch
+                v-model="deepAnalysis"
+                :disabled="generating"
+                aria-label="深度分析"
+                data-testid="deep-analysis-switch"
+              />
+            </div>
             <span class="composer-shortcut">Ctrl / ⌘ + Enter 发送</span>
             <el-button v-if="generating" class="stop-button" @click="stopGeneration">停止生成</el-button>
-            <el-button v-else type="primary" :disabled="!canSend" data-testid="send-button" @click="sendMessage">发送问题 <span>↗</span></el-button>
+            <el-button v-else type="primary" :disabled="!canSend" data-testid="send-button" @click="sendMessage">发送问题</el-button>
           </div>
         </div>
       </footer>

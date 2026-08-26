@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
         })
         const context = await prepareContext(conversation, messages.filter(item => item.id !== assistant.id), model, abortController.signal)
 
-        for await (const chunk of chatStream(model, context, abortController.signal)) {
+        for await (const chunk of chatStream(model, context, abortController.signal, parsed.data.deepAnalysis)) {
           content += chunk
           controller.enqueue(encodeEvent('delta', { content: chunk }))
           if (content.length - lastSavedLength >= 500) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { modelConfigCreateSchema } from '../../server/utils/validation'
+import { generateSchema, modelConfigCreateSchema } from '../../server/utils/validation'
 
 describe('模型配置校验', () => {
   const valid = {
@@ -17,5 +17,16 @@ describe('模型配置校验', () => {
     expect(modelConfigCreateSchema.safeParse({ ...valid, temperature: 2.1 }).success).toBe(false)
     expect(modelConfigCreateSchema.safeParse({ ...valid, timeoutMs: 10 }).success).toBe(false)
     expect(modelConfigCreateSchema.safeParse({ ...valid, apiBaseUrl: 'file:///secret' }).success).toBe(false)
+  })
+})
+
+describe('回答模式校验', () => {
+  it('默认快速回答，并接受显式深度分析开关', () => {
+    expect(generateSchema.parse({ mode: 'initial' }).deepAnalysis).toBe(false)
+    expect(generateSchema.parse({ mode: 'message', content: '分析异常峰', deepAnalysis: true }).deepAnalysis).toBe(true)
+  })
+
+  it('拒绝非布尔类型的深度分析参数', () => {
+    expect(generateSchema.safeParse({ mode: 'message', content: '分析异常峰', deepAnalysis: 'true' }).success).toBe(false)
   })
 })

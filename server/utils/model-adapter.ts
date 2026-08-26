@@ -38,7 +38,20 @@ function chatCompletionsUrl(baseUrl: string) {
   return normalized.endsWith('/chat/completions') ? normalized : `${normalized}/chat/completions`
 }
 
-async function* openAiChat(config: RunnableModelConfig, messages: ChatInputMessage[], signal?: AbortSignal) {
+type ChatRequestConfig = Pick<ModelConfig, 'modelName' | 'temperature' | 'maxOutputTokens'>
+
+export function chatRequestBody(config: ChatRequestConfig, messages: ChatInputMessage[], deepAnalysis = false) {
+  return {
+    model: config.modelName,
+    messages,
+    temperature: config.temperature,
+    max_tokens: config.maxOutputTokens,
+    stream: true,
+    enable_thinking: deepAnalysis
+  }
+}
+
+async function* openAiChat(config: RunnableModelConfig, messages: ChatInputMessage[], signal?: AbortSignal, deepAnalysis = false) {
   const timeoutController = new AbortController()
   const timer = setTimeout(() => timeoutController.abort(), config.timeoutMs)
   const combinedSignal = signal ? AbortSignal.any([signal, timeoutController.signal]) : timeoutController.signal
@@ -50,15 +63,7 @@ async function* openAiChat(config: RunnableModelConfig, messages: ChatInputMessa
         'Content-Type': 'application/json',
         Authorization: `Bearer ${config.apiKey}`
       },
-      body: JSON.stringify({
-        model: config.modelName,
-        messages,
-        temperature: config.temperature,
-        max_tokens: config.maxOutputTokens,
-        stream: true,
-        // 关闭推理型模型的思考阶段，直接输出回答，避免长推理导致前端长时间空白
-        enable_thinking: false
-      }),
+      body: JSON.stringify(chatRequestBody(config, messages, deepAnalysis)),
       signal: combinedSignal
     })
 
@@ -106,12 +111,12 @@ export function runnableModel(config: ModelConfig, masterKey: string): RunnableM
   return { ...config, apiKey: decryptApiKey(config.apiKeyEncrypted, masterKey) }
 }
 
-export async function* chatStream(config: RunnableModelConfig, messages: ChatInputMessage[], signal?: AbortSignal) {
+export async function* chatStream(config: RunnableModelConfig, messages: ChatInputMessage[], signal?: AbortSignal, deepAnalysis = false) {
   if (config.apiBaseUrl.startsWith('mock://')) {
     yield* mockChat(messages, signal)
     return
   }
-  yield* openAiChat(config, messages, signal)
+  yield* openAiChat(config, messages, signal, deepAnalysis)
 }
 
 export async function testConnection(config: RunnableModelConfig) {
