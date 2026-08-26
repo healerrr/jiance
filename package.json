@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --host 127.0.0.1",
+    "prestart": "prisma migrate deploy && prisma db seed",
     "start": "node --env-file=.env .output/server/index.mjs",
     "preview": "nuxt preview --host 127.0.0.1",
     "postinstall": "prisma generate && nuxt prepare",

@@ -58,7 +58,7 @@ tests/e2e/                  Playwright 核心流程测试
 npm install
 ```
 
-复制 `.env.example` 为 `.env`，至少修改 `ENCRYPTION_MASTER_KEY`。生产环境应使用密码管理工具生成并保管至少 32 位的随机值。更换主密钥后，原先保存的模型 API 密钥将无法解密。
+复制 `.env.example` 为 `.env`，至少修改 `ENCRYPTION_MASTER_KEY`。生产环境应使用密码管理工具生成并保管至少 32 位的随机值。更换主密钥后，原先保存的模型 API 密钥将无法解密。如需自动配置百炼模型，同时设置 `BAILIAN_API_KEY`。
 
 ```bash
 npm run db:setup
@@ -84,6 +84,7 @@ npm run start
 | --- | --- | --- |
 | `DATABASE_URL` | 是 | Prisma SQLite 地址，默认 `file:./dev.db`，相对于 `prisma/schema.prisma` |
 | `ENCRYPTION_MASTER_KEY` | 是 | 模型 API 密钥的服务端加密主密钥 |
+| `BAILIAN_API_KEY` | 否 | 设置后自动创建或更新三个百炼模型；只在服务端读取 |
 | `NUXT_PUBLIC_APP_BASE_URL` | 否 | 页面基础地址，默认 `http://127.0.0.1:3000` |
 
 `.env` 已加入 `.gitignore`，不要提交真实密钥。
@@ -119,6 +120,24 @@ curl -X POST http://127.0.0.1:3000/api/conversations/resolve \
 相同 `externalKey` 再次调用会返回同一个 `conversationId`，`created` 为 `false`，且不会覆盖首次保存的 CAS、检测项目、确认内容或扩展数据。
 
 ## 配置真实模型
+
+### 百炼自动配置
+
+在服务器环境变量或服务器 `.env` 中设置：
+
+```dotenv
+BAILIAN_API_KEY="你的百炼 API Key"
+```
+
+执行 `npm run db:setup`，或直接使用 `npm start`。`npm start` 会先自动执行数据库迁移与幂等初始化，然后创建或更新以下配置：
+
+- `deepseek-v4` → `deepseek-v4-pro-0813`（默认）
+- `qwen3.8-max` → `qwen3.8-max`
+- `glm-5.2` → `glm-5.2`
+
+初始化会使用 `ENCRYPTION_MASTER_KEY` 加密百炼密钥，清理旧的“内置演示模型”，且不会把密钥写入源码或浏览器响应。修改服务器环境变量后重启服务即可更新三个模型保存的密钥。
+
+### 手动配置
 
 1. 打开 `/settings/models`。
 2. 点击“新增模型”。
