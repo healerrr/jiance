@@ -17,6 +17,7 @@ const messagesViewport = ref<HTMLElement | null>(null)
 
 const enabledModels = computed(() => (models.value || []).filter(item => item.enabled))
 const canSend = computed(() => Boolean(input.value.trim()) && !generating.value && Boolean(selectedModelId.value))
+const selectedModelName = computed(() => enabledModels.value.find(item => item.id === selectedModelId.value)?.name || '')
 const answerModeTitle = computed(() => deepAnalysis.value ? '深度分析' : '快速回答')
 const answerModeHint = computed(() => deepAnalysis.value ? '更完整地权衡复杂条件，响应会稍慢' : '低延迟响应，适合日常检测追问')
 
@@ -239,9 +240,12 @@ watch(selectedModelId, (value) => {
           <div class="composer-actions">
             <div class="composer-model-switcher">
               <label for="chat-model">当前模型</label>
-              <el-select id="chat-model" v-model="selectedModelId" size="small" :disabled="generating" :teleported="false" data-testid="chat-model-select">
-                <el-option v-for="model in enabledModels" :key="model.id" :label="model.name" :value="model.id" />
-              </el-select>
+              <div class="composer-model-select-wrap">
+                <span class="model-select-sizer" aria-hidden="true">{{ selectedModelName }}</span>
+                <el-select id="chat-model" v-model="selectedModelId" size="small" :disabled="generating" :teleported="false" data-testid="chat-model-select">
+                  <el-option v-for="model in enabledModels" :key="model.id" :label="model.name" :value="model.id" />
+                </el-select>
+              </div>
             </div>
             <div class="answer-mode-inline" :title="answerModeHint">
               <span>回答模式</span>
