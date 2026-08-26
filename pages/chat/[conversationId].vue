@@ -237,7 +237,7 @@ watch(selectedModelId, (value) => {
             <div class="composer-model-switcher">
               <label for="chat-model">当前模型</label>
               <el-select id="chat-model" v-model="selectedModelId" size="small" :disabled="generating" :teleported="false" data-testid="chat-model-select">
-                <el-option v-for="model in enabledModels" :key="model.id" :label="`${model.name} · ${model.modelName}`" :value="model.id" />
+                <el-option v-for="model in enabledModels" :key="model.id" :label="model.name" :value="model.id" />
               </el-select>
             </div>
             <span class="composer-shortcut">Ctrl / ⌘ + Enter 发送</span>

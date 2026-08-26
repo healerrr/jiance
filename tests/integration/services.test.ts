@@ -91,7 +91,12 @@ describe('默认模型与历史摘要', () => {
     })) })
     const conversation = await prisma.conversation.findUniqueOrThrow({ where: { id: result.conversation.id } })
     const messages = await prisma.message.findMany({ where: { conversationId: result.conversation.id }, orderBy: { createdAt: 'asc' } })
-    const mockConfig = await prisma.modelConfig.findFirstOrThrow({ where: { apiBaseUrl: 'mock://chemical-assistant' } })
+    const mockConfig = await prisma.modelConfig.create({ data: {
+      name: `${runId}-summary-model`, apiBaseUrl: 'mock://chemical-assistant',
+      apiKeyEncrypted: encryptApiKey('mock-key', masterKey), modelName: 'summary-mock',
+      temperature: 0.3, maxOutputTokens: 1000, timeoutMs: 5000, enabled: true, isDefault: false
+    } })
+    modelIds.push(mockConfig.id)
     const updated = await updateSummaryIfNeeded(conversation, messages, runnableModel(mockConfig, masterKey))
     expect(updated.summary).toContain('### 实验参数')
     expect(updated.summary).toContain('### 未解决问题')

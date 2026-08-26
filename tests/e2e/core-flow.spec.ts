@@ -3,9 +3,25 @@ import { expect, test } from '@playwright/test'
 const runId = `e2e-${Date.now()}`
 const conversationIds: string[] = []
 const modelIds: string[] = []
+let originalDefaultId: string | undefined
+
+test.beforeAll(async ({ request }) => {
+  const currentModels = await request.get('/api/models')
+  const items = await currentModels.json() as Array<{ id: string, isDefault: boolean }>
+  originalDefaultId = items.find(item => item.isDefault)?.id
+
+  const response = await request.post('/api/models', { data: {
+    name: `${runId}-默认测试模型`, apiBaseUrl: 'mock://chemical-assistant', apiKey: 'mock-e2e-default-key',
+    modelName: 'chemical-mock-e2e', temperature: 0.2, maxOutputTokens: 1800,
+    timeoutMs: 10000, enabled: true, isDefault: true
+  } })
+  const model = await response.json()
+  modelIds.push(model.id)
+})
 
 test.afterAll(async ({ request }) => {
   for (const id of conversationIds) await request.delete(`/api/conversations/${id}`).catch(() => undefined)
+  if (originalDefaultId) await request.post(`/api/models/${originalDefaultId}/default`).catch(() => undefined)
   for (const id of modelIds) await request.delete(`/api/models/${id}`).catch(() => undefined)
 })
 
@@ -135,7 +151,7 @@ test('并发恢复、模型失败与重试、删除会话', async ({ page, reque
   await expect(page.getByText('触发一次失败但保留这条用户消息。')).toBeVisible()
 
   await page.getByTestId('chat-model-select').click()
-  await page.getByRole('option', { name: /内置演示模型/ }).click()
+  await page.getByRole('option', { name: new RegExp(`${runId}-默认测试模型`) }).click()
   await page.getByRole('button', { name: '重新生成' }).last().click()
   await expect(page.getByTestId('message-assistant').last()).toContainText('结论摘要')
   await expect(page.getByText('已完成').last()).toBeVisible()

@@ -15,7 +15,6 @@
 - API 密钥只在服务端通过 AES-256-GCM 加密保存，前端接口仅返回脱敏值。
 - 全局系统提示词和上下文消息/字符上限设置。
 - Markdown、表格、列表、代码块和外链安全渲染；原始 HTML 默认禁用。
-- 内置不产生费用的 Mock 模型，用于首次启动与自动化测试。
 
 ## 技术栈
 
@@ -36,7 +35,7 @@ pages/
 prisma/
   schema.prisma             数据模型
   migrations/               SQLite 迁移
-  seed.ts                   全局设置与内置 Mock 模型
+  seed.ts                   全局设置初始化
 server/api/                 Nitro HTTP/SSE 接口
 server/utils/               加密、模型适配、上下文、摘要、会话服务
 shared/                     默认提示词和共享常量
@@ -51,7 +50,7 @@ tests/e2e/                  Playwright 核心流程测试
 - npm 10 或更高版本
 - 运行 E2E 测试时需要本机安装 Chrome
 
-不需要 MySQL、Redis、Docker 或任何付费模型。
+不需要 MySQL、Redis 或 Docker；开始对话前需配置一个可用的 OpenAI 兼容模型。
 
 ## 初始化与启动
 
@@ -129,7 +128,7 @@ curl -X POST http://127.0.0.1:3000/api/conversations/resolve \
 
 API 地址示例为 `https://api.openai.com/v1`。适配器会请求其 `/chat/completions` 路径并解析 OpenAI SSE 数据格式。聊天页面的模型切换只影响该次及后续回答，之前的消息仍保留实际模型名称快照。
 
-内置 `mock://chemical-assistant` 只用于开发和测试，不应视为真实化学结论来源。
+自动化测试会临时创建 `mock://chemical-assistant` 配置并在结束时清理；正式初始化数据不包含演示模型。
 
 ## 测试
 
