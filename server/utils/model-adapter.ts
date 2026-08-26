@@ -55,7 +55,9 @@ async function* openAiChat(config: RunnableModelConfig, messages: ChatInputMessa
         messages,
         temperature: config.temperature,
         max_tokens: config.maxOutputTokens,
-        stream: true
+        stream: true,
+        // 关闭推理型模型的思考阶段，直接输出回答，避免长推理导致前端长时间空白
+        enable_thinking: false
       }),
       signal: combinedSignal
     })
