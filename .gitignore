@@ -1,0 +1,16 @@
+node_modules
+.nuxt
+.output
+.data
+playwright-report
+test-results
+.playwright-runtime
+coverage
+.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+prisma/dev.db
+tests/fixtures/*.db
+!.env.example

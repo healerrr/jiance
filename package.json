@@ -1,0 +1,46 @@
+{
+  "name": "chemical-testing-ai-chat",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --host 127.0.0.1",
+    "start": "node --env-file=.env .output/server/index.mjs",
+    "preview": "nuxt preview --host 127.0.0.1",
+    "postinstall": "prisma generate && nuxt prepare",
+    "pretest": "prisma migrate deploy && prisma db seed",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:setup": "prisma migrate deploy && prisma db seed",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.1",
+    "element-plus": "2.11.8",
+    "markdown-it": "14.1.0",
+    "nuxt": "3.20.2",
+    "vue": "3.5.41",
+    "vue-router": "4.6.3",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "3.21.0",
+    "@playwright/test": "1.57.0",
+    "@types/markdown-it": "14.1.2",
+    "@types/node": "24.10.1",
+    "happy-dom": "20.0.10",
+    "prisma": "6.19.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7",
+    "vue-tsc": "3.1.5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
