@@ -62,6 +62,42 @@ test('检测列表的 AI 推荐会创建并恢复同一会话', async ({ page, r
   expect((await resolvedAgain.json()).conversationId).toBe(conversationId)
 })
 
+test('全局系统提示词只提交可编辑字段并可成功保存', async ({ page, request }) => {
+  const originalResponse = await request.get('/api/settings')
+  expect(originalResponse.ok()).toBeTruthy()
+  const original = await originalResponse.json() as {
+    globalSystemPrompt: string
+    contextMaxMessages: number
+    contextMaxChars: number
+  }
+  const prompt = `${original.globalSystemPrompt}\n\n${runId}-全局提示词保存验证`
+
+  try {
+    await page.goto('/settings/models')
+    await page.getByTestId('system-prompt').fill(prompt)
+
+    const [saveResponse] = await Promise.all([
+      page.waitForResponse(response => response.url().endsWith('/api/settings') && response.request().method() === 'PUT'),
+      page.getByTestId('save-settings').click()
+    ])
+    expect(saveResponse.ok()).toBeTruthy()
+    expect(saveResponse.request().postDataJSON()).toEqual({
+      globalSystemPrompt: prompt,
+      contextMaxMessages: original.contextMaxMessages,
+      contextMaxChars: original.contextMaxChars
+    })
+
+    const savedResponse = await request.get('/api/settings')
+    expect((await savedResponse.json()).globalSystemPrompt).toBe(prompt)
+  } finally {
+    await request.put('/api/settings', { data: {
+      globalSystemPrompt: original.globalSystemPrompt,
+      contextMaxMessages: original.contextMaxMessages,
+      contextMaxChars: original.contextMaxChars
+    } })
+  }
+})
+
 test('外部入口、首次流式回答、多轮上下文、刷新和模型切换', async ({ page, request }) => {
   const resolved = await request.post('/api/conversations/resolve', { data: {
     externalKey: `${runId}-main`, cas: '50-00-0', testProject: '液相色谱',

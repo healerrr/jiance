@@ -21,7 +21,10 @@ const form = reactive({
 })
 
 watchEffect(() => {
-  if (settings.value) Object.assign(settingsDraft, settings.value)
+  if (!settings.value) return
+  settingsDraft.globalSystemPrompt = settings.value.globalSystemPrompt
+  settingsDraft.contextMaxMessages = settings.value.contextMaxMessages
+  settingsDraft.contextMaxChars = settings.value.contextMaxChars
 })
 
 function openCreate() {
@@ -94,7 +97,14 @@ async function deleteModel(model: ModelConfigPublic) {
 
 async function saveSettings() {
   try {
-    await $fetch('/api/settings', { method: 'PUT', body: settingsDraft })
+    await $fetch('/api/settings', {
+      method: 'PUT',
+      body: {
+        globalSystemPrompt: settingsDraft.globalSystemPrompt,
+        contextMaxMessages: settingsDraft.contextMaxMessages,
+        contextMaxChars: settingsDraft.contextMaxChars
+      }
+    })
     ElMessage.success('全局提示词与上下文策略已保存')
     await refreshSettings()
   } catch (error: any) {
